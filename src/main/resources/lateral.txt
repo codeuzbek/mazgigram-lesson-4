@@ -1,0 +1,54 @@
+-- LEFT JOIN LATERAL
+-- For every row from the left table, run the subquery on the right using values from that row.
+
+CREATE TABLE employee (
+    id BIGINT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL
+);
+
+CREATE TABLE employee_salary (
+    id BIGINT PRIMARY KEY,
+    employee_id BIGINT NOT NULL,
+    salary NUMERIC(12, 2) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+
+    CONSTRAINT fk_employee_salary_employee
+        FOREIGN KEY (employee_id)
+        REFERENCES employee(id)
+);
+------------------------------------------------------
+INSERT INTO employee (id, name) VALUES
+    (1, 'Bob'),
+    (2, 'John'),
+    (3, 'Mike');
+
+INSERT INTO employee_salary (id, employee_id, salary, created_at) VALUES
+    (1, 1, 5000, '2026-01-01 10:00:00'),
+    (2, 1, 6000, '2026-03-01 10:00:00'),
+    (3, 1, 7000, '2026-06-01 10:00:00'),
+
+    (4, 2, 4000, '2026-02-01 10:00:00'),
+    (5, 2, 5500, '2026-05-01 10:00:00');
+------------------------------------------------------
+
+ id | name | salary |     created_at
+----+------+--------+---------------------
+  1 | Bob  | 7000   | 2026-06-01 10:00:00
+  2 | John | 5500   | 2026-05-01 10:00:00
+  3 | Mike | NULL   | NULL
+
+------------------------------------------------------
+SELECT
+    e.id,
+    e.name,
+    s.salary,
+    s.created_at
+FROM employee e
+LEFT JOIN LATERAL (
+    SELECT salary, created_at
+    FROM employee_salary s
+    WHERE s.employee_id = e.id
+    ORDER BY s.created_at DESC
+    LIMIT 1
+) s ON true;
+------------------------------------------------------
